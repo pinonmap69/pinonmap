@@ -14,9 +14,17 @@ export type Screen =
   | 'premium'
   | 'settings'
   | 'terms'
-  | 'privacy';
+  | 'privacy'
+  | 'addPlace'
+  | 'placeDetail'
+  | 'editProfile';
 
 export type Tab = 'home' | 'explore' | 'map' | 'profile' | 'settings';
+
+export interface NavParams {
+  placeId?: string;
+  [key: string]: any;
+}
 
 export interface NavCard {
   id: string;

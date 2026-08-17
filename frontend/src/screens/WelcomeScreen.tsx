@@ -1,5 +1,5 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { Compass, Mail } from 'lucide-react-native';
+import { Compass } from 'lucide-react-native';
 import { WELCOME_IMAGE } from '@/theme';
 import { FadeIn } from '@/components/FadeIn';
 import type { Screen } from '@/types';
@@ -21,17 +21,16 @@ export function WelcomeScreen({ onNavigate }: WelcomeScreenProps) {
           </View>
         </FadeIn>
         <View style={styles.spacer} />
-        <FadeIn delay={100}><Text style={styles.headline}>Discover amazing places{'\n'}around the world.</Text></FadeIn>
-        <FadeIn delay={150}><Text style={styles.subtitle}>Save memories.{'\n'}Share adventures.{'\n'}Explore together.</Text></FadeIn>
+        <FadeIn delay={100}><Text style={styles.headline}>Odkrywaj niezwykłe miejsca{'\n'}na całym świecie.</Text></FadeIn>
+        <FadeIn delay={150}><Text style={styles.subtitle}>Zapisuj wspomnienia.{'\n'}Dziel się przygodami.{'\n'}Odkrywajcie razem.</Text></FadeIn>
         <FadeIn delay={250}>
           <View style={styles.buttonGroup}>
-            <TouchableOpacity style={styles.primaryBtn} activeOpacity={0.9} onPress={() => onNavigate('register')}><Text style={styles.primaryBtnText}>Create Account</Text></TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.9} onPress={() => onNavigate('login')}><Text style={styles.secondaryBtnText}>Sign In</Text></TouchableOpacity>
-            <TouchableOpacity style={styles.googleBtn} activeOpacity={0.9}><Mail size={20} color="#1F2937" /><Text style={styles.googleBtnText}>Continue with Google</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.primaryBtn} activeOpacity={0.9} onPress={() => onNavigate('register')} testID="welcome-register-btn"><Text style={styles.primaryBtnText}>Utwórz konto</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.9} onPress={() => onNavigate('login')} testID="welcome-login-btn"><Text style={styles.secondaryBtnText}>Zaloguj się</Text></TouchableOpacity>
             <View style={styles.linksRow}>
-              <TouchableOpacity onPress={() => onNavigate('privacy')}><Text style={styles.link}>Privacy Policy</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => onNavigate('privacy')}><Text style={styles.link}>Polityka prywatności</Text></TouchableOpacity>
               <Text style={styles.linkDot}>•</Text>
-              <TouchableOpacity onPress={() => onNavigate('terms')}><Text style={styles.link}>Terms of Service</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => onNavigate('terms')}><Text style={styles.link}>Regulamin</Text></TouchableOpacity>
             </View>
           </View>
         </FadeIn>
@@ -45,7 +44,7 @@ const styles = StyleSheet.create({
   bgImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.5)' },
   content: { flex: 1, justifyContent: 'flex-end', paddingHorizontal: 24, paddingBottom: Platform.OS === 'ios' ? 40 : 28 },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 },
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24, marginTop: Platform.OS === 'ios' ? 56 : 40 },
   logoWrap: { width: 40, height: 40, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   logoText: { fontSize: 18, fontWeight: '700', color: '#fff' },
   spacer: { flex: 1 },
@@ -56,8 +55,6 @@ const styles = StyleSheet.create({
   primaryBtnText: { fontSize: 16, fontWeight: '600', color: '#fff' },
   secondaryBtn: { backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', paddingVertical: 16, borderRadius: 18, alignItems: 'center' },
   secondaryBtnText: { fontSize: 16, fontWeight: '600', color: '#fff' },
-  googleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff', paddingVertical: 16, borderRadius: 18 },
-  googleBtnText: { fontSize: 16, fontWeight: '600', color: '#1F2937' },
   linksRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingTop: 8 },
   link: { fontSize: 12, fontWeight: '500', color: 'rgba(255,255,255,0.6)', textDecorationLine: 'underline' },
   linkDot: { fontSize: 12, color: 'rgba(255,255,255,0.3)' },

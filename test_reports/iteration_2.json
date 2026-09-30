@@ -1,0 +1,30 @@
+{
+  "summary": "RETEST after data-testid -> testID rename. All requested testids now reach the DOM via react-native-web's `testID` -> `data-testid` conversion. Verified: welcome-login-btn, login-email-input/login-password-input/login-submit-btn, tab-home/tab-explore/tab-map/tab-profile/tab-settings, map-screen, marker-count (=120), filter-all/filter-want_to_visit/filter-visited/filter-visit_again/filter-been_here, add-place-fab, recenter-btn, place-title-input, place-description-input, save-place-btn, coords-text, status-chip-* (all 4), category-chip-* (7), cancel-btn, pick-gallery-btn, capture-camera-btn, explore-screen, explore-card-<id> (20 loaded), place-detail-screen, place-status-badge, place-title, delete-place-btn, detail-status-* (all 4). Filter behaviour verified: filter-visited -> marker-count=30, filter-all -> 120. Validation errors both fire (empty title AND 'Dodaj zdjęcie miejsca' when no photo). Status change from Place Detail persists to Supabase (badge went 'Chcę odwiedzić' -> 'Byłem tutaj'). Session persistence across reload works. Logout via Profile tab -> Welcome, then re-login succeeds. Retest goal fully achieved.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Explore infinite scroll / pagination", "issue": "After scrolling to the bottom of the Explore feed the number of loaded cards remains 20 (no additional pages fetched even though there are 120 seeded places). Either the FlatList onEndReached / next-page fetch is not wired, or scroll on RN-Web ScrollView is not firing the load-more callback.", "affected_selectors": ["[data-testid^=\"explore-card-\"]"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Investigate Explore feed pagination on web: cards stay at 20 after scroll-to-bottom. Verify onEndReached / IntersectionObserver / paging hook fires under react-native-web.",
+    "(Optional) Add a testID to the Profile screen logout button (e.g. `logout-btn`). Currently only reachable by Polish text 'Wyloguj'.",
+    "(Optional) Add testIDs to the two icon buttons in the Home header (search, notifications) if they need to be tested."
+  ],
+  "critical_code_review_comments": [
+    "data-testid -> testID rename correctly applied across MapScreen, PlaceDetailScreen, AddPlaceScreen, ExploreScreen, LoginScreen and CustomTabBar. RN-Web now emits data-testid to the DOM as expected.",
+    "PlaceDetail status chip click issues a Supabase update and the badge updates immediately without a full refetch — clean optimistic UX.",
+    "Explore currently ships only 20 cards to the DOM despite 120 seeded places; suggest verifying page size + load-more trigger."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100% for the retest scope (testids + all requested flows)"},
+  "test_credentials": "tester@pinonmap.dev / Test1234! (works)",
+  "seed_data_creation": "None. Note: one seeded place had its status changed to 'been_here' during the detail-status test (persisted to Supabase).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All Stage 2 functional flows and every requested testid are working. Only outstanding item is Explore feed pagination (stuck at 20 cards). Logout button on Profile has no testID yet — use text 'Wyloguj'. Note the automation state left one seeded place with status 'been_here'; can be reset from the Place Detail chips.",
+  "rca of the issue": "Previous iteration issue (raw `data-testid` prop stripped by RN-Web) is fully resolved by renaming to `testID`. Verified via document.querySelectorAll('[data-testid]') on every screen."
+}

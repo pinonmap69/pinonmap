@@ -6,7 +6,7 @@ import { listPlaces, type Place } from '@/lib/places';
 import { statusColor } from '@/lib/status';
 import { useLanguage } from '@/providers/LanguageProvider';
 
-const PAGE = 20;
+const PAGE = 24;
 // Deterministic pseudo-random tile heights for the masonry look.
 const HEIGHTS = [150, 200, 240, 180, 220, 170, 260, 190];
 
@@ -91,6 +91,11 @@ export function ExploreScreen() {
             ))}
           </View>
           {loadingMore && <ActivityIndicator color="#2D7FF9" style={{ marginVertical: 20 }} />}
+          {!loadingMore && !end && places.length > 0 && (
+            <TouchableOpacity style={styles.loadMore} onPress={async () => { setLoadingMore(true); try { await load(places.length); } catch {} finally { setLoadingMore(false); } }} testID="load-more-btn">
+              <Text style={styles.loadMoreText}>{t('loadMore')}</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       )}
     </View>
@@ -115,4 +120,6 @@ const styles = StyleSheet.create({
   cardBody: { padding: 12, gap: 2 },
   cardTitle: { fontSize: 14, fontWeight: '700', color: '#1F2937' },
   cardMeta: { fontSize: 12, color: '#6B7280' },
+  loadMore: { alignSelf: 'center', marginTop: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 999 },
+  loadMoreText: { fontSize: 14, fontWeight: '700', color: '#2D7FF9' },
 });

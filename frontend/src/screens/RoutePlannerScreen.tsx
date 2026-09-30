@@ -57,7 +57,7 @@ export function RoutePlannerScreen() {
   const mineRef = useRef<Set<string> | null>(null);
   const reqRef = useRef(0);
 
-  const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(null), 2800); };
+  const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(null), 6000); };
 
   // ---- Initial data: saved route or "route from board" ----
   useEffect(() => {
@@ -315,7 +315,7 @@ export function RoutePlannerScreen() {
           {msg && <View style={styles.okBox} testID="route-msg"><Check size={14} color="#0F766E" /><Text style={styles.okText}>{msg}</Text></View>}
           <View style={styles.saveRow}>
             <TouchableOpacity style={styles.primaryBtn} onPress={onSave} disabled={saving} testID="route-save-btn">
-              {saving ? <ActivityIndicator color="#fff" /> : <><Save size={16} color="#fff" /><Text style={styles.primaryText}>{t('saveRoute')}</Text></>}
+              {saving ? <ActivityIndicator color="#fff" /> : <>{routeId ? <Check size={16} color="#fff" /> : <Save size={16} color="#fff" />}<Text style={styles.primaryText}>{routeId ? t('routeSaved') : t('saveRoute')}</Text></>}
             </TouchableOpacity>
             <TouchableOpacity style={styles.secondaryBtn} onPress={onSaveAsBoard} disabled={saving} testID="route-save-board-btn">
               <LayoutGrid size={16} color="#2D7FF9" /><Text style={styles.secondaryText}>{t('saveAsBoard')}</Text>

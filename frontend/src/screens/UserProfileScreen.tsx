@@ -7,6 +7,8 @@ import { getProfile, getProfileStats, type Profile, type ProfileStats } from '@/
 import { boardsOverview, type BoardOverview } from '@/lib/boards';
 import { isFollowing, toggleFollow, countFollowers, countFollowing } from '@/lib/social';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { getPublicLevel } from '@/lib/gamification';
+import { LevelPill } from '@/components/Gamification';
 
 export function UserProfileScreen() {
   const { params, navigate } = useNav();
@@ -21,6 +23,7 @@ export function UserProfileScreen() {
   const [following, setFollowing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [lvl, setLvl] = useState({ xp: 0, level: 1, badges: 0 });
 
   const load = useCallback(async () => {
     try {
@@ -32,6 +35,7 @@ export function UserProfileScreen() {
         countFollowing(userId),
         me?.id ? isFollowing(me.id, userId) : Promise.resolve(false),
       ]);
+      getPublicLevel(userId).then(setLvl).catch(() => {});
       setProfileState(p); setStats(s); setBoards(b); setFollowers(f1); setFollowingCount(f2); setFollowing(isF);
     } catch {} finally { setLoading(false); }
   }, [userId, me?.id]);
@@ -59,6 +63,7 @@ export function UserProfileScreen() {
       <View style={styles.top}>
         {profile?.avatar_url ? <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} /> : <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>}
         <Text style={styles.name}>{name}</Text>
+        <View style={styles.lvlRow}><LevelPill level={lvl.level} testID="user-level" /><Text style={styles.lvlText}>{lvl.xp} XP · {lvl.badges} {t('badges').toLowerCase()}</Text></View>
         {profile?.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
         <View style={styles.statsRow}>
           <View style={styles.stat}><Text style={styles.statValue}>{stats.pins}</Text><Text style={styles.statLabel}>{t('pins')}</Text></View>
@@ -91,6 +96,8 @@ export function UserProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  lvlRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  lvlText: { fontSize: 12, color: '#6B7280', fontWeight: '600' },
   scroll: { flex: 1, backgroundColor: '#F8FAFC' },
   container: { padding: 20, paddingBottom: 60 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' },

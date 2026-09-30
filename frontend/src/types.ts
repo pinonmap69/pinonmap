@@ -24,7 +24,14 @@ export type Screen =
   | 'routePlanner'
   | 'routes'
   | 'areaSearch'
-  | 'search';
+  | 'search'
+  | 'missions'
+  | 'activity'
+  | 'leaderboard'
+  | 'xpRules'
+  | 'events'
+  | 'eventDetail'
+  | 'createEvent';
 
 export type Tab = 'home' | 'explore' | 'map' | 'profile' | 'settings';
 

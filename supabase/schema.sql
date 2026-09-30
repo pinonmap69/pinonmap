@@ -229,3 +229,40 @@ create policy "board_pins_insert_own" on public.board_pins
 drop policy if exists "board_pins_delete_own" on public.board_pins;
 create policy "board_pins_delete_own" on public.board_pins
   for delete using (auth.uid() = user_id);
+
+-- ---------- LIKES (Etap 3) ----------
+create table if not exists public.likes (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  place_id   uuid not null references public.places(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (user_id, place_id)
+);
+create index if not exists likes_place_id_idx on public.likes(place_id);
+create index if not exists likes_user_id_idx on public.likes(user_id);
+alter table public.likes enable row level security;
+drop policy if exists "likes_select_all" on public.likes;
+create policy "likes_select_all" on public.likes for select using (true);
+drop policy if exists "likes_insert_own" on public.likes;
+create policy "likes_insert_own" on public.likes for insert with check (auth.uid() = user_id);
+drop policy if exists "likes_delete_own" on public.likes;
+create policy "likes_delete_own" on public.likes for delete using (auth.uid() = user_id);
+
+-- ---------- FOLLOWS (Etap 3) ----------
+create table if not exists public.follows (
+  id           uuid primary key default gen_random_uuid(),
+  follower_id  uuid not null references auth.users(id) on delete cascade,
+  following_id uuid not null references auth.users(id) on delete cascade,
+  created_at   timestamptz not null default now(),
+  unique (follower_id, following_id),
+  check (follower_id <> following_id)
+);
+create index if not exists follows_follower_idx on public.follows(follower_id);
+create index if not exists follows_following_idx on public.follows(following_id);
+alter table public.follows enable row level security;
+drop policy if exists "follows_select_all" on public.follows;
+create policy "follows_select_all" on public.follows for select using (true);
+drop policy if exists "follows_insert_own" on public.follows;
+create policy "follows_insert_own" on public.follows for insert with check (auth.uid() = follower_id);
+drop policy if exists "follows_delete_own" on public.follows;
+create policy "follows_delete_own" on public.follows for delete using (auth.uid() = follower_id);

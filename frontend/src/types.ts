@@ -17,12 +17,18 @@ export type Screen =
   | 'privacy'
   | 'addPlace'
   | 'placeDetail'
-  | 'editProfile';
+  | 'editProfile'
+  | 'boards'
+  | 'boardDetail'
+  | 'userProfile';
 
 export type Tab = 'home' | 'explore' | 'map' | 'profile' | 'settings';
 
 export interface NavParams {
   placeId?: string;
+  boardId?: string;
+  boardName?: string;
+  userId?: string;
   [key: string]: any;
 }
 

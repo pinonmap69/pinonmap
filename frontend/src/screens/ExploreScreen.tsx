@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, Image, StyleSheet, Platform, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
-import { Compass, MapPin } from 'lucide-react-native';
+import { Compass, MapPin, Heart } from 'lucide-react-native';
 import { useNav } from '@/navigation/nav';
+import { useAuth } from '@/providers/AuthProvider';
 import { listPlaces, type Place } from '@/lib/places';
+import { listLikedPlaceIds, toggleLike } from '@/lib/social';
 import { statusColor } from '@/lib/status';
 import { useLanguage } from '@/providers/LanguageProvider';
 
@@ -12,8 +14,10 @@ const HEIGHTS = [150, 200, 240, 180, 220, 170, 260, 190];
 
 export function ExploreScreen() {
   const { navigate } = useNav();
+  const { profile } = useAuth();
   const { t } = useLanguage();
   const [places, setPlaces] = useState<Place[]>([]);
+  const [likedSet, setLikedSet] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -26,8 +30,22 @@ export function ExploreScreen() {
   }, []);
 
   useEffect(() => {
-    (async () => { try { await load(0, true); } catch { /* offline */ } finally { setLoading(false); } })();
-  }, [load]);
+    (async () => {
+      try {
+        await load(0, true);
+        if (profile?.id) setLikedSet(await listLikedPlaceIds(profile.id));
+      } catch { /* offline */ } finally { setLoading(false); }
+    })();
+  }, [load, profile?.id]);
+
+  const onLike = async (placeId: string) => {
+    if (!profile?.id) return;
+    const liked = likedSet.has(placeId);
+    const next = new Set(likedSet);
+    if (liked) next.delete(placeId); else next.add(placeId);
+    setLikedSet(next);
+    try { await toggleLike(profile.id, placeId, liked); } catch { setLikedSet(new Set(likedSet)); }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true); setEnd(false);
@@ -80,6 +98,9 @@ export function ExploreScreen() {
                         <View style={[styles.cardImg, styles.cardPlaceholder, { height: h }]}><MapPin size={22} color="#94A3B8" /></View>
                       )}
                       <View style={[styles.statusPill, { backgroundColor: statusColor(p.status) }]} />
+                      <TouchableOpacity style={styles.likeBtn} onPress={() => onLike(p.id)} testID={`explore-like-${p.id}`}>
+                        <Heart size={16} color={likedSet.has(p.id) ? '#EF4444' : '#fff'} fill={likedSet.has(p.id) ? '#EF4444' : 'rgba(0,0,0,0.25)'} />
+                      </TouchableOpacity>
                       <View style={styles.cardBody}>
                         <Text style={styles.cardTitle} numberOfLines={1}>{p.title}</Text>
                         <Text style={styles.cardMeta} numberOfLines={1}>{[p.city, p.country].filter(Boolean).join(', ') || t('coordinates')}</Text>
@@ -117,6 +138,7 @@ const styles = StyleSheet.create({
   cardImg: { width: '100%' },
   cardPlaceholder: { backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' },
   statusPill: { position: 'absolute', top: 10, left: 10, width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: '#fff' },
+  likeBtn: { position: 'absolute', top: 8, right: 8, width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(15,23,42,0.35)', alignItems: 'center', justifyContent: 'center' },
   cardBody: { padding: 12, gap: 2 },
   cardTitle: { fontSize: 14, fontWeight: '700', color: '#1F2937' },
   cardMeta: { fontSize: 12, color: '#6B7280' },

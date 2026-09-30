@@ -156,3 +156,76 @@ create policy "user_delete_place_photos" on storage.objects
   for delete using (
     bucket_id = 'place-photos' and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- ---------- STATUS MIEJSCA (Etap 2) ----------
+-- Statusy: want_to_visit | visited | visit_again | been_here
+alter table public.places
+  add column if not exists status text not null default 'want_to_visit';
+
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'places_status_check') then
+    alter table public.places
+      add constraint places_status_check
+      check (status in ('want_to_visit','visited','visit_again','been_here'));
+  end if;
+end $$;
+
+create index if not exists places_status_idx on public.places(status);
+
+-- ---------- TABLICE / BOARDS (struktura przygotowana pod Etap 3) ----------
+create table if not exists public.boards (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  name         text not null,
+  description  text,
+  cover_url    text,
+  visibility   text not null default 'public' check (visibility in ('public','private','premium')),
+  is_default   boolean not null default false,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+create index if not exists boards_user_id_idx on public.boards(user_id);
+alter table public.boards enable row level security;
+
+drop policy if exists "boards_select_public_or_own" on public.boards;
+create policy "boards_select_public_or_own" on public.boards
+  for select using (visibility = 'public' or auth.uid() = user_id);
+
+drop policy if exists "boards_insert_own" on public.boards;
+create policy "boards_insert_own" on public.boards
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "boards_update_own" on public.boards;
+create policy "boards_update_own" on public.boards
+  for update using (auth.uid() = user_id);
+
+drop policy if exists "boards_delete_own" on public.boards;
+create policy "boards_delete_own" on public.boards
+  for delete using (auth.uid() = user_id);
+
+-- Powiązanie Pinów z tablicami (wiele-do-wielu)
+create table if not exists public.board_pins (
+  id         uuid primary key default gen_random_uuid(),
+  board_id   uuid not null references public.boards(id) on delete cascade,
+  place_id   uuid not null references public.places(id) on delete cascade,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (board_id, place_id)
+);
+
+create index if not exists board_pins_board_id_idx on public.board_pins(board_id);
+create index if not exists board_pins_place_id_idx on public.board_pins(place_id);
+alter table public.board_pins enable row level security;
+
+drop policy if exists "board_pins_select_all" on public.board_pins;
+create policy "board_pins_select_all" on public.board_pins
+  for select using (true);
+
+drop policy if exists "board_pins_insert_own" on public.board_pins;
+create policy "board_pins_insert_own" on public.board_pins
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "board_pins_delete_own" on public.board_pins;
+create policy "board_pins_delete_own" on public.board_pins
+  for delete using (auth.uid() = user_id);

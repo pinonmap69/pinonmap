@@ -25,6 +25,7 @@ const CITIES = [
   { city: 'Ateny', country: 'Grecja', lat: 37.9838, lng: 23.7275 },
 ];
 const CATS = ['Natura', 'Restauracja', 'Zabytek', 'Plaża', 'Hotel', 'Miasto', 'Inne'];
+const STATUSES = ['want_to_visit', 'visited', 'visit_again', 'been_here'];
 
 async function getOrCreateUser() {
   // Try to create the user
@@ -57,6 +58,7 @@ async function seed(userId) {
       title: `${base.city} — miejsce ${i + 1}`,
       description: `Testowa lokalizacja #${i + 1} w mieście ${base.city}.`,
       category: CATS[i % CATS.length],
+      status: STATUSES[i % STATUSES.length],
       city: base.city,
       country: base.country,
       latitude: base.lat + jitter(),

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, Image, StyleSheet, Platform, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
-import { Compass, MapPin, Heart } from 'lucide-react-native';
+import { Compass, MapPin, Heart, Search } from 'lucide-react-native';
 import { useNav } from '@/navigation/nav';
 import { useAuth } from '@/providers/AuthProvider';
 import { listPlaces, type Place } from '@/lib/places';
@@ -23,11 +23,29 @@ export function ExploreScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [end, setEnd] = useState(false);
 
+  // Refs (not state) guard pagination so rapid scroll events never double-fetch or read stale counts.
+  const offsetRef = useRef(0);
+  const busyRef = useRef(false);
+  const endRef = useRef(false);
+
   const load = useCallback(async (offset: number, replace = false) => {
     const data = await listPlaces({ limit: PAGE, offset });
-    setPlaces((prev) => (replace ? data : [...prev, ...data]));
-    if (data.length < PAGE) setEnd(true);
+    offsetRef.current = offset + data.length;
+    setPlaces((prev) => {
+      if (replace) return data;
+      const seen = new Set(prev.map((p) => p.id));
+      return [...prev, ...data.filter((p) => !seen.has(p.id))];
+    });
+    endRef.current = data.length < PAGE;
+    setEnd(endRef.current);
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (busyRef.current || endRef.current) return;
+    busyRef.current = true;
+    setLoadingMore(true);
+    try { await load(offsetRef.current); } catch {} finally { busyRef.current = false; setLoadingMore(false); }
+  }, [load]);
 
   useEffect(() => {
     (async () => {
@@ -48,17 +66,19 @@ export function ExploreScreen() {
   };
 
   const onRefresh = async () => {
-    setRefreshing(true); setEnd(false);
+    setRefreshing(true); setEnd(false); endRef.current = false;
     try { await load(0, true); } catch {} finally { setRefreshing(false); }
   };
 
-  const onScroll = async (e: any) => {
-    if (loadingMore || end) return;
+  const viewportH = useRef(0);
+  const onScroll = (e: any) => {
     const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
-    if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 400) {
-      setLoadingMore(true);
-      try { await load(places.length); } catch {} finally { setLoadingMore(false); }
-    }
+    viewportH.current = layoutMeasurement.height;
+    if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 800) loadMore();
+  };
+  // If the first page doesn't fill the screen there is nothing to scroll — fetch the next page right away.
+  const onContentSizeChange = (_w: number, h: number) => {
+    if (viewportH.current && h < viewportH.current + 200) loadMore();
   };
 
   const columns: Place[][] = [[], []];
@@ -67,8 +87,11 @@ export function ExploreScreen() {
   return (
     <View style={styles.container} testID="explore-screen">
       <View style={styles.head}>
-        <Text style={styles.title}>{t('inspirationFeed')}</Text>
-        <Text style={styles.subtitle}>{t('exploreSubtitle')}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>{t('inspirationFeed')}</Text>
+          <Text style={styles.subtitle}>{t('exploreSubtitle')}</Text>
+        </View>
+        <TouchableOpacity style={styles.searchBtn} onPress={() => navigate('search')} testID="explore-search-btn"><Search size={20} color="#374151" /></TouchableOpacity>
       </View>
       {loading ? (
         <View style={styles.center}><ActivityIndicator size="large" color="#2D7FF9" /></View>
@@ -82,7 +105,10 @@ export function ExploreScreen() {
           contentContainerStyle={styles.feed}
           showsVerticalScrollIndicator={false}
           onScroll={onScroll}
-          scrollEventThrottle={200}
+          onLayout={(e) => { viewportH.current = e.nativeEvent.layout.height; }}
+          onContentSizeChange={onContentSizeChange}
+          scrollEventThrottle={100}
+          testID="explore-feed" 
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2D7FF9" />}
         >
           <View style={styles.masonry}>
@@ -113,10 +139,11 @@ export function ExploreScreen() {
           </View>
           {loadingMore && <ActivityIndicator color="#2D7FF9" style={{ marginVertical: 20 }} />}
           {!loadingMore && !end && places.length > 0 && (
-            <TouchableOpacity style={styles.loadMore} onPress={async () => { setLoadingMore(true); try { await load(places.length); } catch {} finally { setLoadingMore(false); } }} testID="load-more-btn">
+            <TouchableOpacity style={styles.loadMore} onPress={loadMore} testID="load-more-btn">
               <Text style={styles.loadMoreText}>{t('loadMore')}</Text>
             </TouchableOpacity>
           )}
+          {end && places.length > 0 && <Text style={styles.endText} testID="feed-end">{t('endOfFeed')}</Text>}
         </ScrollView>
       )}
     </View>
@@ -125,7 +152,8 @@ export function ExploreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: Platform.OS === 'ios' ? 56 : 32, backgroundColor: '#F8FAFC' },
-  head: { paddingHorizontal: 20, marginBottom: 12 },
+  head: { paddingHorizontal: 20, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  searchBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 26, fontWeight: '800', color: '#1F2937' },
   subtitle: { fontSize: 14, color: '#6B7280', marginTop: 2 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
@@ -143,5 +171,6 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 14, fontWeight: '700', color: '#1F2937' },
   cardMeta: { fontSize: 12, color: '#6B7280' },
   loadMore: { alignSelf: 'center', marginTop: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 999 },
+  endText: { textAlign: 'center', color: '#9CA3AF', fontSize: 13, marginTop: 20 },
   loadMoreText: { fontSize: 14, fontWeight: '700', color: '#2D7FF9' },
 });

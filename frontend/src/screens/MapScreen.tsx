@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, ActivityIndicator, ScrollView } from 'react-native';
-import { Plus, Crosshair, MapPin } from 'lucide-react-native';
+import { Plus, Crosshair, MapPin, Route as RouteIcon, SquareDashed, LocateFixed } from 'lucide-react-native';
+import { MapLayerButton } from '@/components/MapLayerButton';
 import { AppMapView } from '@/components/map/AppMapView';
 import type { MapMarker } from '@/components/map/leafletHtml';
 import { useNav } from '@/navigation/nav';
@@ -24,7 +25,7 @@ export function MapScreen() {
 
   const loadPlaces = useCallback(async () => {
     try {
-      const data = await listPlaces({ userId: profile?.id, limit: 500 });
+      const data = await listPlaces({ userId: profile?.id, limit: 1000 });
       setPlaces(data);
     } catch {
       setPlaces([]);
@@ -86,7 +87,13 @@ export function MapScreen() {
         ) : (
           <AppMapView key={mapKey} center={center} zoom={12} markers={markers} showUser onMarkerPress={(id) => navigate('placeDetail', { placeId: id })} style={styles.map} />
         )}
-        <TouchableOpacity style={styles.recenterBtn} onPress={recenter} testID="recenter-btn"><Crosshair size={20} color="#374151" /></TouchableOpacity>
+        <View style={styles.sideBtns}>
+          <TouchableOpacity style={styles.roundBtn} onPress={recenter} testID="recenter-btn"><Crosshair size={20} color="#374151" /></TouchableOpacity>
+          <MapLayerButton />
+          <TouchableOpacity style={styles.roundBtn} onPress={() => navigate('routePlanner')} testID="map-planner-btn"><RouteIcon size={20} color="#2D7FF9" /></TouchableOpacity>
+          <TouchableOpacity style={styles.roundBtn} onPress={() => navigate('areaSearch')} testID="map-area-btn"><SquareDashed size={20} color="#F97316" /></TouchableOpacity>
+          <TouchableOpacity style={styles.roundBtn} onPress={() => navigate('areaSearch', { nearby: true })} testID="map-nearby-btn"><LocateFixed size={20} color="#10B981" /></TouchableOpacity>
+        </View>
         <TouchableOpacity style={styles.fab} onPress={() => navigate('addPlace', { lat: center.lat, lng: center.lng })} testID="add-place-fab"><Plus size={24} color="#fff" /><Text style={styles.fabText}>{t('addPlaceAction')}</Text></TouchableOpacity>
       </View>
     </View>
@@ -109,7 +116,8 @@ const styles = StyleSheet.create({
   mapWrap: { flex: 1, marginHorizontal: 12, marginBottom: 96, borderRadius: 24, overflow: 'hidden', backgroundColor: '#e8eef3' },
   map: { flex: 1 },
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  recenterBtn: { position: 'absolute', top: 16, right: 16, width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  sideBtns: { position: 'absolute', top: 16, right: 16, gap: 10 },
+  roundBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
   fab: { position: 'absolute', bottom: 20, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#2D7FF9', paddingHorizontal: 22, paddingVertical: 14, borderRadius: 999 },
   fabText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });

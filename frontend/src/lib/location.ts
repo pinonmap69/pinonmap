@@ -41,3 +41,22 @@ export async function reverseGeocode(coords: Coords): Promise<GeoInfo> {
     return {};
   }
 }
+
+export interface PositionResult {
+  coords: Coords | null;
+  denied: boolean;
+  canAskAgain: boolean;
+}
+
+/** Like getCurrentPosition but reports permission state so screens can offer "Open settings". */
+export async function getPositionWithStatus(): Promise<PositionResult> {
+  try {
+    let perm = await Location.getForegroundPermissionsAsync();
+    if (perm.status !== 'granted' && perm.canAskAgain) perm = await Location.requestForegroundPermissionsAsync();
+    if (perm.status !== 'granted') return { coords: null, denied: true, canAskAgain: perm.canAskAgain };
+    const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    return { coords: { latitude: pos.coords.latitude, longitude: pos.coords.longitude }, denied: false, canAskAgain: true };
+  } catch {
+    return { coords: null, denied: false, canAskAgain: true };
+  }
+}

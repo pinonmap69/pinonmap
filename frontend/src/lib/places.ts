@@ -54,6 +54,12 @@ export async function listPlaces(opts: {
   return (data ?? []) as Place[];
 }
 
+export async function countPlaces(userId: string): Promise<number> {
+  const { count, error } = await supabase.from('places').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function getPlace(id: string): Promise<Place | null> {
   const { data, error } = await supabase
     .from('places')

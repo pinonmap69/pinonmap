@@ -11,6 +11,7 @@ export interface Board {
   cover_url: string | null;
   visibility: BoardVisibility;
   is_default: boolean;
+  source_board_id?: string | null;
   created_at: string;
 }
 
@@ -110,4 +111,36 @@ export async function listPublicBoards(excludeUserId?: string, limit = 50): Prom
     if (!a.cover && r.place?.cover_url) a.cover = r.place.cover_url;
   });
   return boards.map((b) => ({ ...b, count: agg[b.id]?.count ?? 0, cover: b.cover_url ?? agg[b.id]?.cover ?? null }));
+}
+
+/** "Pin a whole board": copy another user's board (and all its pins) into your own boards. */
+export async function copyBoard(sourceId: string, userId: string): Promise<Board> {
+  const source = await getBoard(sourceId);
+  if (!source) throw new Error('Board not found');
+  const { data: pins, error } = await supabase.from('board_pins').select('place_id').eq('board_id', sourceId).limit(5000);
+  if (error) throw error;
+  const { data, error: e2 } = await supabase
+    .from('boards')
+    .insert({ user_id: userId, name: source.name, description: source.description, visibility: 'public', source_board_id: source.id })
+    .select('*')
+    .single();
+  if (e2) throw e2;
+  const board = data as Board;
+  const rows = (pins ?? []).map((p: any) => ({ board_id: board.id, place_id: p.place_id, user_id: userId }));
+  if (rows.length) {
+    const { error: e3 } = await supabase.from('board_pins').insert(rows);
+    if (e3) throw e3;
+  }
+  return board;
+}
+
+/** Create a board from a list of place ids in one go (used by routes & area search). */
+export async function createBoardWithPlaces(userId: string, name: string, placeIds: string[], visibility: BoardVisibility = 'private'): Promise<Board> {
+  const board = await createBoard({ user_id: userId, name, visibility });
+  const rows = Array.from(new Set(placeIds)).map((place_id) => ({ board_id: board.id, place_id, user_id: userId }));
+  if (rows.length) {
+    const { error } = await supabase.from('board_pins').insert(rows);
+    if (error) throw error;
+  }
+  return board;
 }

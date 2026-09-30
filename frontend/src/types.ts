@@ -20,7 +20,11 @@ export type Screen =
   | 'editProfile'
   | 'boards'
   | 'boardDetail'
-  | 'userProfile';
+  | 'userProfile'
+  | 'routePlanner'
+  | 'routes'
+  | 'areaSearch'
+  | 'search';
 
 export type Tab = 'home' | 'explore' | 'map' | 'profile' | 'settings';
 

@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Platform, ScrollView, TextInput, ActivityIndicator } from 'react-native';
-import { Plus, Layers, Globe, Lock, Images } from 'lucide-react-native';
+import { Plus, Layers, Globe, Lock, Images, Crown, Route as RouteIcon, ChevronRight } from 'lucide-react-native';
 import { useNav } from '@/navigation/nav';
 import { useAuth } from '@/providers/AuthProvider';
-import { boardsOverview, createBoard, listPublicBoards, type BoardOverview } from '@/lib/boards';
-import { listPlaces } from '@/lib/places';
+import { boardsOverview, createBoard, listPublicBoards, type BoardOverview, type BoardVisibility } from '@/lib/boards';
+import { Chip } from '@/components/Chip';
+import { listPlaces, countPlaces } from '@/lib/places';
 import { useLanguage } from '@/providers/LanguageProvider';
 
 export function BoardsScreen() {
@@ -16,6 +17,7 @@ export function BoardsScreen() {
   const [allCount, setAllCount] = useState(0);
   const [allCover, setAllCover] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [visibility, setVisibility] = useState<BoardVisibility>('public');
   const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -29,8 +31,7 @@ export function BoardsScreen() {
       ]);
       setBoards(mine);
       setAllCover(mineAll[0]?.cover_url ?? null);
-      const all = await listPlaces({ userId: profile.id, limit: 500 });
-      setAllCount(all.length);
+      setAllCount(await countPlaces(profile.id));
       setPublicBoards(pub);
     } catch { /* offline */ }
     finally { setLoading(false); }
@@ -41,7 +42,7 @@ export function BoardsScreen() {
   const create = async () => {
     if (!profile?.id || !name.trim()) return;
     setCreating(true);
-    try { await createBoard({ user_id: profile.id, name: name.trim(), visibility: 'public' }); setName(''); await load(); }
+    try { await createBoard({ user_id: profile.id, name: name.trim(), visibility }); setName(''); setVisibility('public'); await load(); }
     catch {} finally { setCreating(false); }
   };
 
@@ -55,6 +56,17 @@ export function BoardsScreen() {
           {creating ? <ActivityIndicator color="#fff" /> : <Plus size={22} color="#fff" />}
         </TouchableOpacity>
       </View>
+      <View style={styles.visRow} testID="board-visibility-row">
+        <Chip label={t('visibilityPublic')} active={visibility === 'public'} onPress={() => setVisibility('public')} testID="board-vis-public" icon={<Globe size={14} color={visibility === 'public' ? '#fff' : '#4B5563'} />} />
+        <Chip label={t('visibilityPrivate')} active={visibility === 'private'} onPress={() => setVisibility('private')} testID="board-vis-private" icon={<Lock size={14} color={visibility === 'private' ? '#fff' : '#4B5563'} />} />
+        <Chip label={t('visibilityPremium')} active={visibility === 'premium'} onPress={() => setVisibility('premium')} testID="board-vis-premium" icon={<Crown size={14} color={visibility === 'premium' ? '#fff' : '#F59E0B'} />} />
+      </View>
+
+      <TouchableOpacity style={styles.routesRow} onPress={() => navigate('routes')} testID="my-routes-btn">
+        <View style={styles.routesIcon}><RouteIcon size={18} color="#2D7FF9" /></View>
+        <Text style={styles.routesText}>{t('myRoutes')}</Text>
+        <ChevronRight size={16} color="#9CA3AF" />
+      </TouchableOpacity>
 
       <View style={styles.grid}>
         {/* Virtual "All" board */}
@@ -69,7 +81,7 @@ export function BoardsScreen() {
         {boards.map((b) => (
           <TouchableOpacity key={b.id} style={styles.card} onPress={() => navigate('boardDetail', { boardId: b.id, boardName: b.name })} testID={`board-card-${b.id}`}>
             {b.cover ? <Image source={{ uri: b.cover }} style={styles.cardImg} /> : <View style={[styles.cardImg, styles.ph]}><Layers size={26} color="#94A3B8" /></View>}
-            <View style={styles.visBadge}>{b.visibility === 'public' ? <Globe size={11} color="#fff" /> : <Lock size={11} color="#fff" />}</View>
+            <View style={styles.visBadge} testID={`board-vis-badge-${b.id}`}>{b.visibility === 'public' ? <Globe size={11} color="#fff" /> : b.visibility === 'premium' ? <Crown size={11} color="#FCD34D" /> : <Lock size={11} color="#fff" />}</View>
             <View style={styles.cardBody}>
               <Text style={styles.cardTitle} numberOfLines={1}>{b.name}</Text>
               <Text style={styles.cardMeta}>{b.count} {t('pins')}</Text>
@@ -104,7 +116,11 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: '#F8FAFC' },
   container: { padding: 16, paddingBottom: 60 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' },
-  createRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  createRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  visRow: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'nowrap' },
+  routesRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 18, padding: 12, marginBottom: 16 },
+  routesIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center' },
+  routesText: { flex: 1, fontSize: 15, fontWeight: '700', color: '#1F2937' },
   input: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 16, paddingHorizontal: 14, height: 52, fontSize: 15, color: '#1F2937' },
   createBtn: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#2D7FF9', alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },

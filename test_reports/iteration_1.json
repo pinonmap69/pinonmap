@@ -1,0 +1,32 @@
+{
+  "summary": "End-to-end frontend testing of Pin on Map Expo React-Native-Web app. All Stage 2 features are FUNCTIONALLY working: email/password login, session persistence, Map with 120 markers + 4 status filters (30 each), Add Place form (title, description, category, status chips, map picker, coords, gallery/camera buttons), form validation (empty title + missing photo errors both fire), status chip visual activation, Explore Pinterest-style masonry with images/titles/locations, Place Detail with status chips + delete button, logout returning to Welcome, and re-login. The BIG issue is testability: the vast majority of the data-testids listed in the review spec DO NOT reach the DOM because the developer used `data-testid={...}` as a raw prop on React Native components (View/Text/TouchableOpacity). react-native-web only forwards the `testID` prop -> `data-testid`; unknown props like `data-testid` are stripped. Grep confirms only 2 places use `testID=` (WelcomeScreen) while 25 places use `data-testid=` and those are all invisible in the rendered DOM.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "MapScreen / PlaceDetailScreen / AddPlaceScreen / ExploreScreen", "issue": "All data-testid attributes (marker-count, filter-all, filter-want_to_visit, filter-visited, filter-visit_again, filter-been_here, add-place-fab, pick-gallery-btn, capture-camera-btn, place-title-input, place-description-input, status-chip-*, save-place-btn, coords-text, place-detail-screen, place-status-badge, detail-status-*, delete-place-btn, explore-screen, explore-card-<id>) are MISSING from the rendered DOM. Root cause: react-native-web only forwards the `testID` prop to `data-testid`; the code uses the raw `data-testid={...}` prop which is stripped by RN. DOM query `document.querySelectorAll('[data-testid]')` returned 0 elements on Map/AddPlace/Explore/PlaceDetail. Only `welcome-login-btn` works because WelcomeScreen correctly uses `testID=`.", "selector": "all data-testid attributes in screens/*", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AddPlaceScreen", "issues": ["Photo-required inline error shows text 'Zmień zdjęcie' (=Change photo) in red — the label is the same as the field label, so it's not obvious it's an error. Consider a distinct error string like 'Dodaj zdjęcie miejsca'."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "CRITICAL: Replace every `data-testid={...}` occurrence in /app/frontend/src/screens/* (and any other RN component files) with `testID={...}`. react-native-web will then auto-emit `data-testid` on the DOM node. Files affected (25 hits): MapScreen.tsx, PlaceDetailScreen.tsx, AddPlaceScreen.tsx, ExploreScreen.tsx (grep -rn 'data-testid' /app/frontend/src/screens/ confirms).",
+    "After the testID rename, re-run the review test IDs (marker-count, filter-*, add-place-fab, place-title-input, place-description-input, status-chip-*, save-place-btn, coords-text, place-detail-screen, place-status-badge, detail-status-*, delete-place-btn, explore-screen, explore-card-<id>, pick-gallery-btn, capture-camera-btn) — they should then be selectable.",
+    "Optional: reword the 'Zmień zdjęcie' inline error on AddPlace to something distinct from the section label."
+  ],
+  "critical_code_review_comments": [
+    "React-Native-Web testability: use `testID=` prop, NOT raw `data-testid=`. Only WelcomeScreen got this right. This is the single biggest deviation from the review spec.",
+    "Frontend logs show a benign warning: `Animated: useNativeDriver is not supported ...` — safe to ignore on web.",
+    "Session persistence via localStorage confirmed after browser reload — good."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (backend not used per spec)", "frontend": "100% functionally, ~5% for the data-testid selectors requested"},
+  "test_credentials": "tester@pinonmap.dev / Test1234! (works)",
+  "seed_data_creation": "None. Existing 120 seeded places verified.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All Stage 2 functional flows pass (login, persist, map+filters+120 markers, add-place form + validation, explore masonry + card→detail, status chips visible, logout, re-login). ONLY blocker is that data-testids don't appear in DOM. After main agent renames `data-testid=` → `testID=` in RN screens, re-verify each testid appears via `document.querySelectorAll('[data-testid]')`. On the Explore card click I used the img element (not testid) and it opened Place Detail correctly. Filter chip labels used for selection: 'Wszystkie', 'Chcę odwiedzić', 'Odwiedzone', 'Chcę odwiedzić ponownie', 'Byłem tutaj'. Tab labels: Home / Odkrywaj / Mapa / Profil / Ustawienia. Login button text 'Zaloguj się'. Save button text 'Zapisz miejsce'.",
+  "rca of the issue": "In react-native-web, RN components only forward specific known props to the DOM. `testID` is the RN-standard prop that RNW converts into the DOM attribute `data-testid`. Any other unknown props (including a literal `data-testid`) are filtered out by the createElement pipeline. Because the developer wrote `data-testid={...}` directly, none of these reach the DOM. Fix: rename to `testID={...}` everywhere except on plain HTML (View/Text/TouchableOpacity are RN)."
+}

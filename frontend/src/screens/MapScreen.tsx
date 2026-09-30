@@ -59,20 +59,20 @@ export function MapScreen() {
   }, [places]);
 
   return (
-    <View style={styles.container} data-testid="map-screen">
+    <View style={styles.container} testID="map-screen">
       <View style={styles.header}>
         <Text style={styles.title}>{t('travelMap')}</Text>
-        <View style={styles.countBadge}><MapPin size={14} color="#2D7FF9" /><Text style={styles.countText} data-testid="marker-count">{markers.length}</Text></View>
+        <View style={styles.countBadge}><MapPin size={14} color="#2D7FF9" /><Text style={styles.countText} testID="marker-count">{markers.length}</Text></View>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filters} contentContainerStyle={styles.filtersContent}>
-        <TouchableOpacity style={[styles.filterChip, filter === 'all' && styles.filterChipActiveAll]} onPress={() => setFilter('all')} data-testid="filter-all">
+        <TouchableOpacity style={[styles.filterChip, filter === 'all' && styles.filterChipActiveAll]} onPress={() => setFilter('all')} testID="filter-all">
           <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>{t('all')} · {counts.all}</Text>
         </TouchableOpacity>
         {PLACE_STATUSES.map((s) => {
           const active = filter === s;
           return (
-            <TouchableOpacity key={s} style={[styles.filterChip, active && { backgroundColor: STATUS_COLORS[s], borderColor: STATUS_COLORS[s] }]} onPress={() => setFilter(s)} data-testid={`filter-${s}`}>
+            <TouchableOpacity key={s} style={[styles.filterChip, active && { backgroundColor: STATUS_COLORS[s], borderColor: STATUS_COLORS[s] }]} onPress={() => setFilter(s)} testID={`filter-${s}`}>
               <View style={[styles.legendDot, { backgroundColor: active ? '#fff' : STATUS_COLORS[s] }]} />
               <Text style={[styles.filterText, active && styles.filterTextActive]}>{t(STATUS_TKEY[s])} · {counts[s]}</Text>
             </TouchableOpacity>
@@ -86,8 +86,8 @@ export function MapScreen() {
         ) : (
           <AppMapView key={mapKey} center={center} zoom={12} markers={markers} showUser onMarkerPress={(id) => navigate('placeDetail', { placeId: id })} style={styles.map} />
         )}
-        <TouchableOpacity style={styles.recenterBtn} onPress={recenter} data-testid="recenter-btn"><Crosshair size={20} color="#374151" /></TouchableOpacity>
-        <TouchableOpacity style={styles.fab} onPress={() => navigate('addPlace', { lat: center.lat, lng: center.lng })} data-testid="add-place-fab"><Plus size={24} color="#fff" /><Text style={styles.fabText}>{t('addPlaceAction')}</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.recenterBtn} onPress={recenter} testID="recenter-btn"><Crosshair size={20} color="#374151" /></TouchableOpacity>
+        <TouchableOpacity style={styles.fab} onPress={() => navigate('addPlace', { lat: center.lat, lng: center.lng })} testID="add-place-fab"><Plus size={24} color="#fff" /><Text style={styles.fabText}>{t('addPlaceAction')}</Text></TouchableOpacity>
       </View>
     </View>
   );

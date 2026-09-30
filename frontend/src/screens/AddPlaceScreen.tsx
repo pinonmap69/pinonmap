@@ -63,8 +63,8 @@ export function AddPlaceScreen() {
   const save = async () => {
     setError(null);
     if (!profile?.id) return;
-    if (!title.trim()) return setError(t('title'));
-    if (!photoUrl) return setError(t('changePhoto'));
+    if (!title.trim()) return setError(t('titleRequired'));
+    if (!photoUrl) return setError(t('addPhotoRequired'));
     setSaving(true);
     try {
       const geo = await reverseGeocode({ latitude: coords.lat, longitude: coords.lng });
@@ -94,37 +94,37 @@ export function AddPlaceScreen() {
       {photoUrl ? (
         <View style={styles.photoWrap}>
           <Image source={{ uri: photoUrl }} style={styles.photo} />
-          <TouchableOpacity style={styles.photoChange} onPress={() => pick('gallery')} data-testid="change-photo-btn">
+          <TouchableOpacity style={styles.photoChange} onPress={() => pick('gallery')} testID="change-photo-btn">
             <Text style={styles.photoChangeText}>{t('changePhoto')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.photoActions}>
-          <TouchableOpacity style={styles.photoBtn} onPress={() => pick('gallery')} disabled={uploading} data-testid="pick-gallery-btn">
+          <TouchableOpacity style={styles.photoBtn} onPress={() => pick('gallery')} disabled={uploading} testID="pick-gallery-btn">
             {uploading ? <ActivityIndicator color="#2D7FF9" /> : (<><ImageIcon size={22} color="#2D7FF9" /><Text style={styles.photoBtnText}>{t('choosePhoto')}</Text></>)}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.photoBtn} onPress={() => pick('camera')} disabled={uploading} data-testid="capture-camera-btn">
+          <TouchableOpacity style={styles.photoBtn} onPress={() => pick('camera')} disabled={uploading} testID="capture-camera-btn">
             <Camera size={22} color="#2D7FF9" /><Text style={styles.photoBtnText}>{t('takePhoto')}</Text>
           </TouchableOpacity>
         </View>
       )}
       {photoGps && (
-        <View style={styles.gpsNote} data-testid="photo-gps-note">
+        <View style={styles.gpsNote} testID="photo-gps-note">
           <Navigation size={14} color="#0F766E" />
           <Text style={styles.gpsNoteText}>{t('photoLocationUsed')}</Text>
         </View>
       )}
 
       <Text style={styles.label}>{t('title')}</Text>
-      <TextInput style={styles.input} placeholder={t('placeTitlePlaceholder')} value={title} onChangeText={setTitle} data-testid="place-title-input" />
+      <TextInput style={styles.input} placeholder={t('placeTitlePlaceholder')} value={title} onChangeText={setTitle} testID="place-title-input" />
 
       <Text style={styles.label}>{t('description')}</Text>
-      <TextInput style={[styles.input, styles.textarea]} placeholder={t('descriptionPlaceholder')} value={description} onChangeText={setDescription} multiline data-testid="place-description-input" />
+      <TextInput style={[styles.input, styles.textarea]} placeholder={t('descriptionPlaceholder')} value={description} onChangeText={setDescription} multiline testID="place-description-input" />
 
       <Text style={styles.label}>{t('category')}</Text>
       <View style={styles.chipRow}>
         {categories.map((c) => (
-          <TouchableOpacity key={c} style={[styles.chip, category === c && styles.chipActive]} onPress={() => setCategory(c)} data-testid={`category-chip-${c}`}>
+          <TouchableOpacity key={c} style={[styles.chip, category === c && styles.chipActive]} onPress={() => setCategory(c)} testID={`category-chip-${c}`}>
             <Text style={[styles.chipText, category === c && styles.chipTextActive]}>{c}</Text>
           </TouchableOpacity>
         ))}
@@ -135,7 +135,7 @@ export function AddPlaceScreen() {
         {PLACE_STATUSES.map((s) => {
           const active = status === s;
           return (
-            <TouchableOpacity key={s} style={[styles.statusChip, active && { backgroundColor: STATUS_COLORS[s], borderColor: STATUS_COLORS[s] }]} onPress={() => setStatus(s)} data-testid={`status-chip-${s}`}>
+            <TouchableOpacity key={s} style={[styles.statusChip, active && { backgroundColor: STATUS_COLORS[s], borderColor: STATUS_COLORS[s] }]} onPress={() => setStatus(s)} testID={`status-chip-${s}`}>
               <View style={[styles.statusDot, { backgroundColor: active ? '#fff' : STATUS_COLORS[s] }]} />
               <Text style={[styles.chipText, active && styles.chipTextActive]}>{t(STATUS_TKEY[s])}</Text>
             </TouchableOpacity>
@@ -149,15 +149,15 @@ export function AddPlaceScreen() {
       </View>
       <View style={styles.coordsRow}>
         <MapPin size={14} color="#6B7280" />
-        <Text style={styles.coordsText} data-testid="coords-text">{coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}</Text>
+        <Text style={styles.coordsText} testID="coords-text">{coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}</Text>
       </View>
 
       {error && (<View style={styles.errorBox}><AlertCircle size={16} color="#DC2626" /><Text style={styles.errorText}>{error}</Text></View>)}
 
-      <TouchableOpacity style={styles.saveBtn} onPress={save} disabled={saving} data-testid="save-place-btn">
+      <TouchableOpacity style={styles.saveBtn} onPress={save} disabled={saving} testID="save-place-btn">
         {saving ? <ActivityIndicator color="#fff" /> : (<><Check size={18} color="#fff" /><Text style={styles.saveBtnText}>{t('savePlace')}</Text></>)}
       </TouchableOpacity>
-      <TouchableOpacity style={styles.cancelBtn} onPress={goBack} data-testid="cancel-btn"><Text style={styles.cancelBtnText}>{t('cancel')}</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.cancelBtn} onPress={goBack} testID="cancel-btn"><Text style={styles.cancelBtnText}>{t('cancel')}</Text></TouchableOpacity>
     </ScrollView>
   );
 }

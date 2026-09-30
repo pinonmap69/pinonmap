@@ -47,7 +47,7 @@ export function ExploreScreen() {
   places.forEach((p, i) => columns[i % 2].push(p));
 
   return (
-    <View style={styles.container} data-testid="explore-screen">
+    <View style={styles.container} testID="explore-screen">
       <View style={styles.head}>
         <Text style={styles.title}>{t('inspirationFeed')}</Text>
         <Text style={styles.subtitle}>{t('exploreSubtitle')}</Text>
@@ -73,7 +73,7 @@ export function ExploreScreen() {
                 {col.map((p, i) => {
                   const h = HEIGHTS[(ci * 4 + i) % HEIGHTS.length];
                   return (
-                    <TouchableOpacity key={p.id} style={styles.card} onPress={() => navigate('placeDetail', { placeId: p.id })} data-testid={`explore-card-${p.id}`}>
+                    <TouchableOpacity key={p.id} style={styles.card} onPress={() => navigate('placeDetail', { placeId: p.id })} testID={`explore-card-${p.id}`}>
                       {p.cover_url ? (
                         <Image source={{ uri: p.cover_url }} style={[styles.cardImg, { height: h }]} />
                       ) : (

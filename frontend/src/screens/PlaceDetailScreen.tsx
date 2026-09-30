@@ -56,16 +56,16 @@ export function PlaceDetailScreen() {
   const isOwner = profile?.id === place.user_id;
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.container} data-testid="place-detail-screen">
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container} testID="place-detail-screen">
       {photos.length > 0 && (
         <ScrollView horizontal pagingEnabled style={styles.gallery}>
           {photos.map((url, i) => <Image key={i} source={{ uri: url }} style={styles.galleryImg} />)}
         </ScrollView>
       )}
       <View style={styles.body}>
-        <Text style={styles.title} data-testid="place-title">{place.title}</Text>
+        <Text style={styles.title} testID="place-title">{place.title}</Text>
         <View style={styles.metaRow}>
-          <View style={[styles.metaChip, { backgroundColor: statusColor(place.status) + '22' }]} data-testid="place-status-badge">
+          <View style={[styles.metaChip, { backgroundColor: statusColor(place.status) + '22' }]} testID="place-status-badge">
             <View style={[styles.statusDot, { backgroundColor: statusColor(place.status) }]} />
             <Text style={[styles.metaChipText, { color: statusColor(place.status) }]}>{t(STATUS_TKEY[place.status])}</Text>
           </View>
@@ -83,7 +83,7 @@ export function PlaceDetailScreen() {
               {PLACE_STATUSES.map((s) => {
                 const active = place.status === s;
                 return (
-                  <TouchableOpacity key={s} disabled={savingStatus} style={[styles.statusChip, active && { backgroundColor: STATUS_COLORS[s], borderColor: STATUS_COLORS[s] }]} onPress={() => changeStatus(s)} data-testid={`detail-status-${s}`}>
+                  <TouchableOpacity key={s} disabled={savingStatus} style={[styles.statusChip, active && { backgroundColor: STATUS_COLORS[s], borderColor: STATUS_COLORS[s] }]} onPress={() => changeStatus(s)} testID={`detail-status-${s}`}>
                     <View style={[styles.statusDot, { backgroundColor: active ? '#fff' : STATUS_COLORS[s] }]} />
                     <Text style={[styles.statusChipText, active && { color: '#fff' }]}>{t(STATUS_TKEY[s])}</Text>
                   </TouchableOpacity>
@@ -102,11 +102,11 @@ export function PlaceDetailScreen() {
 
         {isOwner && (confirm ? (
           <View style={styles.confirmRow}>
-            <TouchableOpacity style={styles.deleteBtn} onPress={remove} disabled={deleting} data-testid="confirm-delete-btn">{deleting ? <ActivityIndicator color="#EF4444" /> : <Text style={styles.deleteBtnText}>{t('sureDelete')}</Text>}</TouchableOpacity>
+            <TouchableOpacity style={styles.deleteBtn} onPress={remove} disabled={deleting} testID="confirm-delete-btn">{deleting ? <ActivityIndicator color="#EF4444" /> : <Text style={styles.deleteBtnText}>{t('sureDelete')}</Text>}</TouchableOpacity>
             <TouchableOpacity style={styles.cancelBtn} onPress={() => setConfirm(false)}><Text style={styles.cancelBtnText}>{t('cancel')}</Text></TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity style={styles.deleteBtn} onPress={() => setConfirm(true)} data-testid="delete-place-btn"><Trash2 size={16} color="#EF4444" /><Text style={styles.deleteBtnText}>{t('deletePlace')}</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.deleteBtn} onPress={() => setConfirm(true)} testID="delete-place-btn"><Trash2 size={16} color="#EF4444" /><Text style={styles.deleteBtnText}>{t('deletePlace')}</Text></TouchableOpacity>
         ))}
       </View>
     </ScrollView>

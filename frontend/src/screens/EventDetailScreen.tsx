@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Share } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Calendar, MapPin, Users, BadgeCheck, Trash2, Share2, Radio, Crosshair } from 'lucide-react-native';
-import * as Linking from 'expo-linking';
+import { ShareSheet } from '@/components/ShareSheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNav } from '@/navigation/nav';
 import { useAuth } from '@/providers/AuthProvider';
@@ -24,6 +24,7 @@ export function EventDetailScreen() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [denied, setDenied] = useState<{ canAskAgain: boolean } | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -68,10 +69,7 @@ export function EventDetailScreen() {
     try { await deleteEvent(event.id); goBack(); } catch {}
   };
 
-  const share = () => {
-    const url = Linking.createURL(`event/${event.id}`);
-    Share.share({ message: `${event.title} — ${formatEventDate(event, language)}\n${url}`, url }).catch(() => {});
-  };
+  const share = () => setShareOpen(true);
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 24 }]} testID="event-detail-screen">
@@ -112,6 +110,8 @@ export function EventDetailScreen() {
         {!isOwner && <TouchableOpacity style={styles.iconBtn} onPress={() => navigate('userProfile', { userId: event.user_id })} testID="event-author-btn"><Users size={18} color="#374151" /><Text style={styles.iconText}>{t('profile')}</Text></TouchableOpacity>}
         {isOwner && <TouchableOpacity style={styles.iconBtn} onPress={remove} testID="event-delete-btn"><Trash2 size={18} color="#EF4444" /><Text style={[styles.iconText, { color: '#EF4444' }]}>{t('deleteEvent')}</Text></TouchableOpacity>}
       </View>
+      <ShareSheet visible={shareOpen} onClose={() => setShareOpen(false)}
+        content={{ kind: 'event', id: event.id, title: event.title, text: formatEventDate(event, language), imageUrl: event.cover_url, lat: event.latitude, lng: event.longitude }} />
     </ScrollView>
   );
 }

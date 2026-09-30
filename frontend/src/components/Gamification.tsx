@@ -1,14 +1,14 @@
 import { View, Text, StyleSheet } from 'react-native';
 import {
   MapPin, MapPinned, Trophy, Footprints, Backpack, Globe, Building2, Landmark, Flag, Earth, Crown, Camera, LayoutGrid,
-  Users, Heart, Route, CalendarCheck, BadgeCheck, Bookmark, UserPlus, CalendarPlus, CalendarDays, Sparkles, Award, Lock,
+  Users, Heart, Route, CalendarCheck, BadgeCheck, Bookmark, UserPlus, CalendarPlus, CalendarDays, Sparkles, Award, Lock, Share2,
   type LucideIcon,
 } from 'lucide-react-native';
 import type { Tier } from '@/lib/gamification';
 
 const ICONS: Record<string, LucideIcon> = {
   MapPin, MapPinned, Trophy, Footprints, Backpack, Globe, Building2, Landmark, Flag, Earth, Crown, Camera, LayoutGrid,
-  Users, Heart, Route, CalendarCheck, BadgeCheck, Bookmark, UserPlus, CalendarPlus, CalendarDays, Sparkles,
+  Users, Heart, Route, CalendarCheck, BadgeCheck, Bookmark, UserPlus, CalendarPlus, CalendarDays, Sparkles, Share2,
 };
 
 export const iconFor = (name: string): LucideIcon => ICONS[name] ?? Award;

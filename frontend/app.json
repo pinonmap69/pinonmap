@@ -13,7 +13,17 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pinonmap.app"
+      "bundleIdentifier": "com.pinonmap.app",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "whatsapp",
+          "fb-messenger",
+          "fb",
+          "tg",
+          "instagram",
+          "tiktok"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {

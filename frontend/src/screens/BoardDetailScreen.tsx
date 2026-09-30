@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Share, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { Trash2, X, Copy, Route as RouteIcon, Share2, Check, Globe, Lock, Crown, MapPin } from 'lucide-react-native';
-import * as Linking from 'expo-linking';
+import { ShareSheet } from '@/components/ShareSheet';
 import { useNav } from '@/navigation/nav';
 import { useAuth } from '@/providers/AuthProvider';
-import { getBoard, listBoardPlaces, deleteBoard, removePinFromBoard, copyBoard, type Board } from '@/lib/boards';
+import { getBoard, listBoardPlaces, deleteBoard, removePinFromBoard, copyBoard, setBoardVisibility, type Board } from '@/lib/boards';
 import { listPlaces, type Place } from '@/lib/places';
 import { statusColor } from '@/lib/status';
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -27,6 +27,7 @@ export function BoardDetailScreen() {
   const [copied, setCopied] = useState<Board | null>(null);
   const [error, setError] = useState<string | null>(null);
   const busyRef = useRef(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -80,10 +81,7 @@ export function BoardDetailScreen() {
     finally { setCopying(false); }
   };
 
-  const share = async () => {
-    const url = Linking.createURL(`board/${boardId}`);
-    try { await Share.share({ message: `${board?.name ?? t('all')} — Pin on Map\n${url}`, url }); } catch {}
-  };
+  const share = () => setShareOpen(true);
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2D7FF9" /></View>;
 
@@ -157,6 +155,12 @@ export function BoardDetailScreen() {
 
       {!isAll && isOwner && board && (
         <TouchableOpacity style={styles.deleteBtn} onPress={remove} testID="delete-board-btn"><Trash2 size={16} color="#EF4444" /><Text style={styles.deleteBtnText}>{t('deleteBoard')}</Text></TouchableOpacity>
+      )}
+      {board && (
+        <ShareSheet visible={shareOpen} onClose={() => setShareOpen(false)}
+          content={{ kind: 'board', id: board.id, title: board.name, text: `${places.length} ${t('pins')}`, imageUrl: board.cover_url ?? places[0]?.cover_url }}
+          isPrivate={board.visibility !== 'public'}
+          onMakePublic={isOwner ? async () => { await setBoardVisibility(board.id, 'public'); setBoard({ ...board, visibility: 'public' }); } : undefined} />
       )}
     </ScrollView>
   );

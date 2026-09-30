@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
-import { Plus, X, Shuffle, Save, LayoutGrid, Route as RouteIcon, MapPin, Check } from 'lucide-react-native';
+import { Plus, X, Shuffle, Save, LayoutGrid, Route as RouteIcon, MapPin, Check, Share2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppMapView } from '@/components/map/AppMapView';
 import type { MapMarker } from '@/components/map/leafletHtml';
@@ -14,7 +14,8 @@ import { useLanguage } from '@/providers/LanguageProvider';
 import { routingProvider, type TravelMode, type RouteResult } from '@/lib/routing';
 import { bboxOf, distanceToPolyline, simplify, nearestNeighbourOrder, formatKm, formatDuration, type LatLng } from '@/lib/geo';
 import { placesInBBox, myPlaceIds, CATEGORY_GROUPS } from '@/lib/search';
-import { getRoute, saveRoute, type RouteStop } from '@/lib/routes';
+import { getRoute, saveRoute, setRouteVisibility, type RouteStop } from '@/lib/routes';
+import { ShareSheet } from '@/components/ShareSheet';
 import { listBoardPlaces, createBoardWithPlaces } from '@/lib/boards';
 import { listPlaces, type Place } from '@/lib/places';
 import { getPositionWithStatus } from '@/lib/location';
@@ -48,7 +49,10 @@ export function RoutePlannerScreen() {
   const [pickTarget, setPickTarget] = useState<'start' | 'end' | null>(null);
   const [focused, setFocused] = useState<Candidate | null>(null);
   const [name, setName] = useState('');
-  const [routeId, setRouteId] = useState<string | undefined>(params.routeId);
+  const [routeId, setRouteId] = useState<string | undefined>(undefined);
+  const [viewedId, setViewedId] = useState<string | undefined>(undefined);
+  const [visibility, setVisibility] = useState<'public' | 'private' | 'premium'>('private');
+  const [shareOpen, setShareOpen] = useState(false);
   const [boardId, setBoardId] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -67,7 +71,10 @@ export function RoutePlannerScreen() {
           const r = await getRoute(params.routeId);
           if (r) {
             setStart(r.start_point); setEnd(r.end_point); setStops(r.stops ?? []);
-            setMode(r.mode ?? 'car'); setRadiusKm(r.radius_km ?? 20); setName(r.name); setBoardId(r.board_id);
+            setMode(r.mode ?? 'car'); setRadiusKm(r.radius_km ?? 20); setName(r.name);
+            setVisibility(r.visibility ?? 'private');
+            // Someone else's (shared) route: view it, saving creates your own copy.
+            if (r.user_id === profile?.id) { setRouteId(r.id); setBoardId(r.board_id); } else setViewedId(r.id);
           }
         } else if (params.boardId) {
           const places = params.boardId === 'all'
@@ -164,7 +171,7 @@ export function RoutePlannerScreen() {
       user_id: profile.id, name: routeName(), start_point: start, end_point: end, stops,
       geometry: route ? simplify(route.geometry, 300) : null,
       distance_m: route?.distanceM ?? null, duration_s: route?.durationS ?? null,
-      radius_km: radiusKm, mode, visibility: 'private', board_id: extra.board_id ?? boardId,
+      radius_km: radiusKm, mode, visibility: routeId ? visibility : 'private', board_id: extra.board_id ?? boardId,
     }, routeId);
     setRouteId(saved.id);
     return saved;
@@ -321,6 +328,17 @@ export function RoutePlannerScreen() {
               <LayoutGrid size={16} color="#2D7FF9" /><Text style={styles.secondaryText}>{t('saveAsBoard')}</Text>
             </TouchableOpacity>
           </View>
+          {(routeId || viewedId) && (
+            <TouchableOpacity style={styles.shareBtn} onPress={() => setShareOpen(true)} testID="route-share-btn">
+              <Share2 size={16} color="#374151" /><Text style={styles.shareText}>{t('share')}</Text>
+            </TouchableOpacity>
+          )}
+          {(routeId || viewedId) && (
+            <ShareSheet visible={shareOpen} onClose={() => setShareOpen(false)}
+              content={{ kind: 'route', id: (routeId ?? viewedId)!, title: routeName(), text: route ? `${formatKm(route.distanceM)} · ${stops.length} ${t('stops').toLowerCase()}` : undefined, imageUrl: stops.find((s) => s.cover_url)?.cover_url, lat: start.lat, lng: start.lng }}
+              isPrivate={!!routeId && visibility !== 'public'}
+              onMakePublic={routeId ? async () => { await setRouteVisibility(routeId, 'public'); setVisibility('public'); } : undefined} />
+          )}
         </View>
       )}
     </ScrollView>
@@ -375,5 +393,7 @@ const styles = StyleSheet.create({
   primaryBtn: { flex: 1, height: 52, borderRadius: 16, backgroundColor: '#2D7FF9', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   primaryText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   secondaryBtn: { flex: 1, height: 52, borderRadius: 16, backgroundColor: '#EFF6FF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  shareBtn: { marginHorizontal: 16, height: 48, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  shareText: { fontSize: 15, fontWeight: '700', color: '#374151' },
   secondaryText: { color: '#2D7FF9', fontWeight: '700', fontSize: 15 },
 });

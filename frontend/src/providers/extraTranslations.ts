@@ -132,6 +132,13 @@ export const extraPl = {
   locationRequired: "Wskaż lokalizację na mapie",
   checkinRadius: "Check-in w promieniu",
   levelUp: "Nowy poziom!",
+  sharePrivateNote: "Ta treść jest prywatna — odbiorcy jej nie zobaczą. Ustaw ją jako publiczną, aby udostępnić.",
+  makePublicShare: "Ustaw jako publiczną i udostępnij",
+  sharePhotoHint: "Instagram / TikTok: udostępniamy zdjęcie, a opis z linkiem jest w schowku — wklej go.",
+  copyLink: "Kopiuj link",
+  moreOptions: "Więcej opcji",
+  appNotInstalledCopied: "Aplikacja niedostępna — link skopiowany do schowka",
+  linkCopied: "Link skopiowany do schowka",
 };
 
 export type ExtraKey = keyof typeof extraPl;
@@ -269,4 +276,11 @@ export const extraEn: Record<ExtraKey, string> = {
   locationRequired: "Pick a location on the map",
   checkinRadius: "Check-in radius",
   levelUp: "Level up!",
+  sharePrivateNote: "This content is private — recipients won’t be able to see it. Make it public to share.",
+  makePublicShare: "Make public & share",
+  sharePhotoHint: "Instagram / TikTok: we share the photo and put the caption with link on your clipboard — just paste it.",
+  copyLink: "Copy link",
+  moreOptions: "More options",
+  appNotInstalledCopied: "App not available — link copied to clipboard",
+  linkCopied: "Link copied to clipboard",
 };

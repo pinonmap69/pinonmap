@@ -57,3 +57,8 @@ export async function deleteRoute(id: string): Promise<void> {
   const { error } = await supabase.from('routes').delete().eq('id', id);
   if (error) throw error;
 }
+
+export async function setRouteVisibility(id: string, visibility: BoardVisibility): Promise<void> {
+  const { error } = await supabase.from('routes').update({ visibility }).eq('id', id);
+  if (error) throw error;
+}

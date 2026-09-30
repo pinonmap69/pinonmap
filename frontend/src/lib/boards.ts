@@ -144,3 +144,8 @@ export async function createBoardWithPlaces(userId: string, name: string, placeI
   }
   return board;
 }
+
+export async function setBoardVisibility(id: string, visibility: BoardVisibility): Promise<void> {
+  const { error } = await supabase.from('boards').update({ visibility }).eq('id', id);
+  if (error) throw error;
+}

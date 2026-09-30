@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { UserPlus, UserCheck, MapPin, Layers } from 'lucide-react-native';
+import { UserPlus, UserCheck, MapPin, Layers, Share2 } from 'lucide-react-native';
+import { ShareSheet } from '@/components/ShareSheet';
 import { useNav } from '@/navigation/nav';
 import { useAuth } from '@/providers/AuthProvider';
 import { getProfile, getProfileStats, type Profile, type ProfileStats } from '@/lib/profiles';
@@ -24,6 +25,7 @@ export function UserProfileScreen() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [lvl, setLvl] = useState({ xp: 0, level: 1, badges: 0 });
+  const [shareOpen, setShareOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -70,6 +72,8 @@ export function UserProfileScreen() {
           <View style={styles.stat}><Text style={styles.statValue}>{followers}</Text><Text style={styles.statLabel}>{t('followers')}</Text></View>
           <View style={styles.stat}><Text style={styles.statValue}>{followingCount}</Text><Text style={styles.statLabel}>{t('followingLabel')}</Text></View>
         </View>
+        <TouchableOpacity style={styles.shareBtn} onPress={() => setShareOpen(true)} testID="user-share-btn"><Share2 size={14} color="#374151" /><Text style={styles.shareText}>{t('share')}</Text></TouchableOpacity>
+        <ShareSheet visible={shareOpen} onClose={() => setShareOpen(false)} content={{ kind: 'user', id: userId, title: name, text: profile?.bio ?? undefined, imageUrl: profile?.avatar_url }} />
         {!isMe && (
           <TouchableOpacity style={[styles.followBtn, following && styles.followingBtn]} onPress={onFollow} disabled={busy} testID="follow-btn">
             {following ? <UserCheck size={16} color="#2D7FF9" /> : <UserPlus size={16} color="#fff" />}
@@ -96,6 +100,8 @@ export function UserProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 14, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', marginTop: 10 },
+  shareText: { fontSize: 13, fontWeight: '700', color: '#374151' },
   lvlRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
   lvlText: { fontSize: 12, color: '#6B7280', fontWeight: '600' },
   scroll: { flex: 1, backgroundColor: '#F8FAFC' },

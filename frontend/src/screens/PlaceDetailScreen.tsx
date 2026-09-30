@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, TextInput, Share } from 'react-native';
-import * as Linking from 'expo-linking';
+import { ShareSheet } from '@/components/ShareSheet';
 import { MapPin, Trash2, Tag, Calendar, AlertCircle, Heart, Bookmark, User, X, Plus, Check, Share2 } from 'lucide-react-native';
 import { AppMapView } from '@/components/map/AppMapView';
 import { useNav } from '@/navigation/nav';
@@ -17,6 +17,7 @@ export function PlaceDetailScreen() {
   const { language, t } = useLanguage();
   const [place, setPlace] = useState<Place | null>(null);
   const [loading, setLoading] = useState(true);
+  const [shareOpen, setShareOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +123,7 @@ export function PlaceDetailScreen() {
             <Bookmark size={18} color="#2D7FF9" />
             <Text style={[styles.actionText, { color: '#2D7FF9' }]}>{t('saveToBoard')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => { const url = Linking.createURL(`place/${place.id}`); Share.share({ message: `${place.title} — Pin on Map\nhttps://www.openstreetmap.org/?mlat=${place.latitude}&mlon=${place.longitude}#map=15/${place.latitude}/${place.longitude}\n${url}`, url }).catch(() => {}); }} testID="share-place-btn">
+          <TouchableOpacity style={styles.actionBtn} onPress={() => setShareOpen(true)} testID="share-place-btn">
             <Share2 size={18} color="#6B7280" /><Text style={styles.actionText}>{t('share')}</Text>
           </TouchableOpacity>
           {!isOwner && (
@@ -200,6 +201,7 @@ export function PlaceDetailScreen() {
           </View>
         </View>
       </Modal>
+      <ShareSheet visible={shareOpen} onClose={() => setShareOpen(false)} content={{ kind: 'place', id: place.id, title: place.title, text: [place.city, place.country].filter(Boolean).join(', ') || undefined, imageUrl: place.cover_url, lat: place.latitude, lng: place.longitude }} />
     </ScrollView>
   );
 }
